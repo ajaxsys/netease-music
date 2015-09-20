@@ -35,26 +35,43 @@ def get_playlist(playlist_id):
     return data['result']
 
 def save_track(track, folder, position):
-    name = track['hMusic']['name']
+    artist = track['artists'][0]['name']
+    xMusic = 'hMusic'
+    name = track[xMusic]['name']
+
+    if name is None:
+        print '[WARN] None hMusic, try mMusic' , position
+        xMusic = 'mMusic'
+        name = track[xMusic]['name']
+        if name is None:
+            print '[WARN] None mMusic, try lMusic' , position
+            xMusic = 'lMusic'
+            name = track[xMusic]['name']
+            if name is None:
+                print '[ERROR] None lMusic, Stop download' , position
+                return
+        
 
     if position < 10:
         pos = "0%d" % position
     else:
         pos = "%d" % position
 
-    #fname = pos + ' ' + name + track['hMusic']['extension']
-    fname = name + '.' + track['hMusic']['extension']
+    #fname = pos + ' ' + name + track[xMusic]['extension']
+    fname = artist + ' - ' + name + '.mp3'
     fname = string.replace(fname, '/', '_')
     fpath = os.path.normpath(os.path.join(folder, fname))
 
     if os.path.exists(fpath):
         return
 
-    print "Downloading", fpath, "..."
 
-    dfsId = str(track['hMusic']['dfsId'])
-    url = 'http://m%d.music.126.net/%s/%s.%s' % (random.randrange(1, 3), encrypted_id(dfsId), dfsId, track['hMusic']['extension'])
-    resp = urllib2.urlopen(track['mp3Url'])
+    dfsId = str(track[xMusic]['dfsId'])
+    hUrl = 'http://m%d.music.126.net/%s/%s.%s' % (random.randrange(1, 3), encrypted_id(dfsId), dfsId, '.mp3')
+    print "Downloading", fpath, "from", hUrl
+
+    #resp = urllib2.urlopen(track['mp3Url'])
+    resp = urllib2.urlopen(hUrl)
     data = resp.read()
     resp.close()
 
@@ -78,4 +95,3 @@ if __name__ == '__main__':
         print "Usage: %s <playlist id>" % sys.argv[0] 
         sys.exit(1)
     download_playlist(sys.argv[1])
-
